@@ -1,6 +1,6 @@
 # DonutSMP Market
 
-A fully automated Minecraft marketplace bot for DonutSMP. Players browse and buy items through a Telegram Mini App, pay with Solana, and the in-game bot delivers items directly to them — no manual work required from the seller.
+A fully automated Minecraft arbitrage bot for DonutSMP. Players place orders through a Telegram Mini App and pay with Solana — the in-game bot then purchases the items from the DonutSMP shop at the cheaper in-game price and delivers them directly to the buyer. The margin between shop cost and sale price is pure profit, fully hands-off.
 
 Built with Node.js, Mineflayer, Telegraf, and the Solana Web3 SDK.
 
@@ -11,10 +11,11 @@ Built with Node.js, Mineflayer, Telegraf, and the Solana Web3 SDK.
 1. Player opens the **Telegram Mini App** → sees available items and prices
 2. They place an order and send **Solana payment** to the bot's wallet
 3. Payment is detected on-chain automatically
-4. The **in-game Minecraft bot** accepts their TPA, travels to them, and delivers the items
-5. Transaction is logged to the database and the player's balance is updated
+4. The **in-game Minecraft bot** buys the items from the DonutSMP shop at the low in-game price
+5. Bot accepts the player's TPA and delivers the items directly to them
+6. Transaction is logged and the profit (sale price minus shop cost) is recorded
 
-Everything from payment detection to item delivery is fully automated.
+Everything from payment detection to purchase and delivery is fully automated.
 
 ---
 
