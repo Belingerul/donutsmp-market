@@ -1,0 +1,7 @@
+.env
+node_modules/
+data/
+.claude/
+SITUATION_NOTES.txt
+*.db
+auth_cache/

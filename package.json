@@ -1,0 +1,25 @@
+{
+  "name": "donutsmp-market",
+  "version": "1.0.0",
+  "description": "DonutSMP skeleton spawner marketplace with Telegram bot",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.98.4",
+    "better-sqlite3": "^12.10.0",
+    "bs58": "^6.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^5.2.1",
+    "mineflayer": "^4.20.0",
+    "mineflayer-pathfinder": "^2.4.5",
+    "node-fetch": "^3.3.2",
+    "prismarine-item": "^1.14.0",
+    "telegraf": "^4.15.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

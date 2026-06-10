@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Skellys Market</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+:root {
+  --bg:      #0d0d12;
+  --text:    #f0f0f5;
+  --hint:    #6b6b7e;
+  --secondary:#141420;
+  --accent:  #7c6fff;
+  --accent2: #c8b9ff;
+  --green:   #34d399;
+  --red:     #f87171;
+  --amber:   #fbbf24;
+  --blue:    #60a5fa;
+  --card:    rgba(255,255,255,0.045);
+  --border:  rgba(255,255,255,0.08);
+  --r:14px; --rs:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{background:#0d0d12;overflow-y:scroll;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  overflow-y:visible;
+  padding-bottom:80px;
+  font-size:16px;
+  max-width:600px;
+  margin:0 auto;
+}
+
+/* ── Scrollbar ────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:rgba(255,255,255,.03);border-radius:4px;}
+::-webkit-scrollbar-thumb{background:rgba(124,111,255,.35);border-radius:4px;transition:background .2s;}
+::-webkit-scrollbar-thumb:hover{background:rgba(124,111,255,.6);}
+html{scrollbar-width:thin;scrollbar-color:rgba(124,111,255,.35) rgba(255,255,255,.03);}
+
+/* ── Nav ─────────────────────────────────────────── */
+.nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:600px;
+  display:flex;
+  background:var(--secondary);
+  border-top:1px solid var(--border);
+  z-index:100;
+  padding-bottom:env(safe-area-inset-bottom);
+  transition:transform .2s ease;
+  will-change:transform;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:11px 0;background:none;border:none;color:var(--hint);
+  font-family:'Inter',sans-serif;font-size:11px;font-weight:600;
+  cursor:pointer;transition:color .15s;letter-spacing:.4px;text-transform:uppercase;
+}
+.nav-btn.active{color:var(--accent);}
+.nav-btn svg{width:22px;height:22px;stroke-width:1.8;}
+
+/* ── Screens ──────────────────────────────────────── */
+.screen{display:none;padding:18px;animation:fadeUp .18s ease;}
+.screen.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ── Balance Hero ─────────────────────────────────── */
+.balance-card{
+  background:linear-gradient(145deg,#161228,#0f0f1e 60%,#121828);
+  border:1px solid rgba(124,111,255,.25);
+  border-radius:var(--r);padding:22px;margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.balance-card::after{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,111,255,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.balance-label{
+  font-size:10px;font-weight:800;
+  text-transform:uppercase;letter-spacing:2.5px;margin-bottom:10px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2),#fff,var(--accent2),var(--accent));
+  background-size:300% 100%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:label-shine 3.5s linear infinite;
+}
+@keyframes label-shine{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.balance-amount{
+  font-size:42px;font-weight:800;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--accent2);letter-spacing:-1.5px;line-height:1;
+}
+.balance-sub{font-size:13px;color:var(--hint);margin-top:10px;letter-spacing:.1px;}
+
+/* ── Stats ────────────────────────────────────────── */
+.stats-row{display:flex;gap:10px;margin-bottom:14px;}
+.stat-card{
+  flex:1;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--rs);padding:14px 10px;text-align:center;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  min-height:72px;
+}
+.stat-val{
+  font-size:18px;font-weight:800;
+  font-family:'JetBrains Mono',monospace;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  background:linear-gradient(135deg,var(--text) 0%,var(--accent2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.stat-lbl{font-size:10px;color:var(--accent2);opacity:.6;margin-top:5px;text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+
+/* ── Cards ────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;}
+.card-label{font-size:13px;font-weight:700;color:var(--accent2);letter-spacing:.2px;margin-bottom:16px;}
+
+/* ── Buttons ──────────────────────────────────────── */
+.btn{
+  display:block;width:100%;padding:15px;border:none;border-radius:var(--rs);
+  font-family:'Inter',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;transition:opacity .12s,transform .1s;letter-spacing:.2px;
+}
+.btn:active{transform:scale(.98);opacity:.88;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn-sm{padding:8px 14px;font-size:13px;width:auto;display:inline-block;border-radius:7px;}
+
+/* ── Inputs ───────────────────────────────────────── */
+.field{margin-bottom:14px;}
+.field-label{font-size:12px;font-weight:600;color:var(--accent2);opacity:.75;margin-bottom:6px;display:block;}
+.input{
+  width:100%;background:var(--secondary);border:1px solid var(--border);
+  border-radius:var(--rs);padding:13px 15px;color:var(--text);
+  font-family:'Inter',sans-serif;font-size:16px;outline:none;transition:border-color .15s;
+}
+.input:focus{border-color:var(--accent);}
+.input::placeholder{color:var(--hint);}
+select.input{appearance:none;}
+
+/* ── Qty ──────────────────────────────────────────── */
+.qty-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--secondary);border:1px solid var(--border);
+  border-radius:var(--rs);padding:5px;
+}
+.qty-btn{
+  width:48px;height:48px;background:var(--card);border:none;
+  border-radius:8px;color:var(--text);font-size:24px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .12s;flex-shrink:0;
+}
+.qty-btn:active{background:var(--accent);}
+
+/* Typeable qty input — sits in place of the old div */
+.qty-input{
+  flex:1;border:none;outline:none;background:transparent;
+  text-align:center;font-size:24px;font-weight:700;
+  font-family:'JetBrains Mono',monospace;color:var(--text);
+  width:0; /* flex handles width */
+  -moz-appearance:textfield;
+}
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+
+.presets{display:flex;gap:7px;margin-top:10px;}
+
+/* ── Preview ──────────────────────────────────────── */
+.preview{
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(124,111,255,.08);border:1px solid rgba(124,111,255,.2);
+  border-radius:var(--rs);padding:14px 16px;margin:14px 0;
+}
+.preview-label{font-size:14px;color:var(--hint);}
+.preview-val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent2);}
+
+/* ── Tabs ─────────────────────────────────────────── */
+.tabs{display:flex;gap:8px;margin-bottom:14px;}
+.tab{
+  flex:1;padding:11px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--rs);text-align:center;font-size:14px;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.tab.active{background:rgba(124,111,255,.15);border-color:var(--accent);color:var(--accent);}
+
+/* ── Badges ───────────────────────────────────────── */
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;font-family:'JetBrains Mono',monospace;}
+.bg{background:rgba(52,211,153,.12);color:var(--green);}
+.br{background:rgba(248,113,113,.12);color:var(--red);}
+.by{background:rgba(251,191,36,.12);color:var(--amber);}
+.bb{background:rgba(96,165,250,.12);color:var(--blue);}
+.bp{background:rgba(124,111,255,.12);color:var(--accent);}
+
+/* ── Row items ────────────────────────────────────── */
+.row{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 14px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px;
+}
+.row-icon{
+  width:38px;height:38px;border-radius:9px;background:var(--secondary);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+  font-family:'JetBrains Mono',monospace;font-weight:700;
+}
+.row-body{flex:1;min-width:0;}
+.row-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row-sub{font-size:12px;color:var(--hint);margin-top:3px;}
+.row-val{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--green);text-align:right;flex-shrink:0;}
+.row-val.neg{color:var(--red);}
+.row-val.neutral{color:var(--hint);}
+
+/* ── Progress ─────────────────────────────────────── */
+.trade-card{
+  background:linear-gradient(145deg,#0d1a12,#0a1310);
+  border:1px solid rgba(52,211,153,.2);
+  border-radius:var(--r);padding:20px;margin-bottom:14px;
+}
+.trade-hd{font-size:12px;font-weight:700;color:var(--green);margin-bottom:16px;text-transform:uppercase;letter-spacing:1.2px;}
+.steps{display:flex;flex-direction:column;gap:10px;}
+.step{display:flex;align-items:center;gap:12px;font-size:14px;opacity:.3;}
+.step.done{opacity:.5;}
+.step.active{opacity:1;}
+.step-dot{
+  width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;
+}
+.step.done .step-dot{background:var(--green);border-color:var(--green);color:#000;}
+.step.active .step-dot{border-color:var(--accent);background:rgba(124,111,255,.15);animation:pulse 1.8s infinite;}
+.step.done span{color:var(--hint);text-decoration:line-through;}
+.step.active span{color:var(--accent2);font-weight:600;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(124,111,255,.5)}50%{box-shadow:0 0 0 6px rgba(124,111,255,0)}}
+.trade-hint{font-size:13px;color:var(--hint);margin-top:14px;line-height:1.6;border-top:1px solid var(--border);padding-top:12px;}
+
+/* ── Bot status ───────────────────────────────────── */
+.bot-row{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--hint);font-weight:500;}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot.on  {background:var(--green);box-shadow:0 0 6px var(--green);}
+.dot.off {background:var(--red);  box-shadow:0 0 6px var(--red);}
+.dot.busy{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+
+/* ── Notification ─────────────────────────────────── */
+.notif{
+  position:fixed;top:14px;left:14px;right:14px;z-index:999;
+  display:flex;align-items:flex-start;gap:10px;
+  padding:14px 16px;border-radius:var(--rs);
+  font-size:14px;font-weight:500;
+  transform:translateY(-120px);opacity:0;
+  transition:transform .3s cubic-bezier(.34,1.4,.64,1),opacity .3s;
+  max-width:570px;margin:0 auto;line-height:1.45;
+}
+.notif.show{transform:translateY(0);opacity:1;}
+.notif.success{background:#061a10;border:1px solid rgba(52,211,153,.4);color:var(--green);}
+.notif.error  {background:#1a0608;border:1px solid rgba(248,113,113,.4);color:var(--red);}
+.notif.info   {background:#0a0f1a;border:1px solid rgba(96,165,250,.4); color:var(--blue);}
+.notif.warning{background:#1a1006;border:1px solid rgba(251,191,36,.4); color:var(--amber);}
+.notif-close{margin-left:auto;background:none;border:none;color:inherit;font-size:16px;cursor:pointer;opacity:.6;padding-left:10px;flex-shrink:0;}
+
+/* ── Price rows ───────────────────────────────────── */
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;}
+.price-row+.price-row{border-top:1px solid var(--border);}
+.price-name{font-size:16px;font-weight:700;letter-spacing:-.1px;}
+.price-sub{font-size:13px;color:var(--hint);margin-top:3px;}
+.price-val{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:17px;color:var(--green);text-align:right;}
+.price-sub2{font-size:13px;color:var(--hint);text-align:right;margin-top:3px;}
+
+/* ── Code / info ──────────────────────────────────── */
+.code{
+  background:var(--secondary);border:1px solid var(--border);
+  border-radius:8px;padding:12px 14px;
+  font-family:'JetBrains Mono',monospace;font-size:14px;
+  color:var(--accent2);margin:8px 0;line-height:1.7;
+}
+.info-box{
+  background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);
+  border-radius:var(--rs);padding:14px 16px;
+  font-size:13px;color:var(--hint);line-height:1.7;margin:10px 0;
+}
+.info-box strong{color:var(--text);}
+
+/* ── Misc ─────────────────────────────────────────── */
+.hr{height:1px;background:var(--border);margin:16px 0;}
+.empty{text-align:center;color:var(--hint);font-size:14px;padding:36px 0;}
+.setup-center{text-align:center;padding:30px 16px 22px;}
+.setup-center h2{font-size:22px;font-weight:800;margin-bottom:8px;}
+.setup-center p{font-size:14px;color:var(--hint);line-height:1.6;}
+.section-title{
+  font-size:13px;font-weight:700;color:var(--accent2);
+  display:flex;align-items:center;gap:10px;
+  margin:18px 0 10px;letter-spacing:.3px;
+}
+.section-title::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,rgba(124,111,255,.35),transparent);
+}
+
+/* ── Coin input with suffix ───────────────────────── */
+.coin-input-wrap{position:relative;}
+.coin-input-wrap .input{padding-right:60px;}
+.coin-suffix{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:var(--hint);font-family:'JetBrains Mono',monospace;
+}
+#w-amount::-webkit-outer-spin-button,
+#w-amount::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+#w-amount{-moz-appearance:textfield;}
+
+/* ── SOL branding ─────────────────────────────────── */
+.sol-method-box{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(153,69,255,.08);border:1px solid rgba(153,69,255,.25);
+  border-radius:var(--rs);padding:8px 14px;
+}
+.sol-icon{
+  width:32px;height:32px;border-radius:50%;
+  background:#000;border:1px solid rgba(153,69,255,.35);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;padding:7px;
+}
+.sol-icon svg{width:100%;height:100%;}
+.sol-method-info{flex:1;}
+.sol-method-name{font-size:15px;font-weight:700;color:var(--text);}
+.sol-method-sub{font-size:12px;color:var(--green);margin-top:2px;}
+
+/* ── Row icon SOL ─────────────────────────────────── */
+.sol-row-icon{
+  width:38px;height:38px;border-radius:50%;
+  background:#000;border:1px solid rgba(153,69,255,.25);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;padding:7px;
+}
+.sol-row-icon svg{width:100%;height:100%;}
+
+/* ── Sol card logo ────────────────────────────────── */
+.sol-card-logo{
+  position:absolute;top:50%;transform:translateY(-50%);
+  right:38px;width:54px;height:42px;
+  opacity:.8;pointer-events:none;
+}
+
+/* ── Save-address toggle ──────────────────────────── */
+.input.addr-locked{color:var(--hint);cursor:default;}
+.addr-label-row{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:6px;padding-right:12px;
+}
+.save-toggle{
+  display:flex;align-items:center;gap:6px;
+  cursor:pointer;user-select:none;
+}
+.save-circle{
+  width:18px;height:18px;border-radius:50%;
+  border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,border-color .15s;flex-shrink:0;
+}
+.save-circle.ticked{background:var(--accent);border-color:var(--accent);}
+.save-check{
+  width:8px;height:5px;
+  border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;
+  transform:rotate(-45deg) translateY(-1px);
+  display:none;
+}
+.save-circle.ticked .save-check{display:block;}
+.save-lbl{font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.3px;}
+
+/* ── Wallet typography ────────────────────────────── */
+.wl-head{
+  font-size:17px;font-weight:800;letter-spacing:-.3px;margin-bottom:20px;
+  background:linear-gradient(120deg,var(--accent2) 0%,#d8d0ff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.flbl{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1.1px;margin-bottom:7px;
+  display:flex;align-items:center;gap:6px;
+}
+.flbl::before{
+  content:'';display:inline-block;
+  width:3px;height:11px;border-radius:2px;flex-shrink:0;
+}
+.flbl-amount{color:var(--green);}
+.flbl-amount::before{background:var(--green);}
+.flbl-sol{color:#b57bff;}
+.flbl-sol::before{background:#9945ff;}
+.flbl-method{color:var(--blue);}
+.flbl-method::before{background:var(--blue);}
+.flbl-save{margin-bottom:0;color:var(--accent);}
+.flbl-save::before{background:var(--accent);}
+.wl-hist-head{
+  font-size:13px;font-weight:700;color:var(--accent2);
+  display:flex;align-items:center;gap:10px;
+  margin:20px 0 12px;letter-spacing:.4px;
+}
+.wl-hist-head::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,rgba(124,111,255,.4),transparent);
+}
+
+/* ── Balance glow pulse ───────────────────────────── */
+@keyframes balance-glow{
+  0%,100%{text-shadow:0 0 18px rgba(200,185,255,.1);}
+  50%     {text-shadow:0 0 36px rgba(200,185,255,.32);}
+}
+.balance-amount{animation:balance-glow 3.5s ease-in-out infinite;}
+@keyframes balance-pop{
+  0%  {transform:scale(.95);opacity:.5;}
+  60% {transform:scale(1.03);}
+  100%{transform:scale(1);opacity:1;}
+}
+.balance-amount.pop{animation:balance-pop .45s cubic-bezier(.34,1.4,.64,1);}
+
+/* ── Balance card shimmer strip ───────────────────── */
+.balance-card::before{
+  content:'';position:absolute;top:0;left:-60%;
+  width:40%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.045),transparent);
+  animation:card-shimmer 4s ease-in-out infinite;pointer-events:none;
+}
+@keyframes card-shimmer{
+  0%,100%{left:-60%;}50%{left:110%;}
+}
+
+/* ── Stat icon ────────────────────────────────────── */
+.stat-icon{font-size:20px;margin-bottom:5px;line-height:1;}
+
+/* ── Price row icon ───────────────────────────────── */
+.price-with-icon{display:flex;align-items:center;gap:12px;}
+.price-emoji{width:30px;height:30px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(124,111,255,.35));}
+
+/* ── Quick sell CTA on home ───────────────────────── */
+.hero-cta{
+  display:flex;gap:8px;margin-top:16px;
+}
+.hero-cta-btn{
+  flex:1;padding:11px;border:none;border-radius:var(--rs);
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;
+  transition:opacity .12s,transform .1s;letter-spacing:.1px;
+}
+.hero-cta-btn:active{transform:scale(.97);opacity:.85;}
+.cta-sell{background:var(--accent);color:#fff;}
+.cta-withdraw{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.25);color:var(--green);}
+
+/* ── Sell hero banner ─────────────────────────────── */
+.sell-hero{
+  background:linear-gradient(135deg,#100d20 0%,#0d1118 100%);
+  border:1px solid rgba(124,111,255,.3);
+  border-radius:var(--r);padding:20px;margin-bottom:14px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.sell-hero::after{
+  content:'';position:absolute;top:-40px;right:-20px;
+  width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,111,255,.1) 0%,transparent 70%);
+  pointer-events:none;
+}
+.sell-hero-left{}
+.sell-hero-tag{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;}
+.sell-hero-price{font-size:34px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--accent2);letter-spacing:-1px;line-height:1;}
+.sell-hero-sub{font-size:12px;color:var(--hint);margin-top:5px;}
+.sell-hero-emoji{font-size:52px;filter:drop-shadow(0 0 14px rgba(124,111,255,.45));position:relative;z-index:1;}
+
+/* ── How-it-works steps ───────────────────────────── */
+.how-step{display:flex;align-items:flex-start;gap:12px;padding:9px 0;}
+.how-step+.how-step{border-top:1px solid var(--border);}
+.how-num{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;
+  background:rgba(124,111,255,.12);border:1px solid rgba(124,111,255,.28);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:var(--accent);margin-top:1px;
+}
+.how-text{font-size:14px;color:var(--hint);line-height:1.55;}
+.how-text strong{color:var(--text);font-weight:600;}
+
+/* ── Start Trade button ───────────────────────────── */
+.btn-sell{
+  background:linear-gradient(135deg,#7c6fff,#5a4fcf);
+  color:#fff;font-size:16px;padding:16px;
+  box-shadow:0 4px 24px rgba(124,111,255,.3);
+  position:relative;overflow:hidden;
+}
+.btn-sell::after{
+  content:'';position:absolute;top:0;left:-100%;
+  width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
+  animation:btn-shimmer 2.8s ease-in-out infinite;
+}
+@keyframes btn-shimmer{0%{left:-100%;}40%,100%{left:150%;}}
+.btn-sell:active{transform:scale(.98);box-shadow:0 2px 10px rgba(124,111,255,.2);}
+.btn-sell:disabled{box-shadow:none;}
+
+/* ── Preview pulse on change ──────────────────────── */
+@keyframes preview-pop{
+  0%  {transform:scale(.97);color:var(--hint);}
+  60% {transform:scale(1.04);color:#d4e8ff;}
+  100%{transform:scale(1);color:var(--accent2);}
+}
+.preview-val.changed{animation:preview-pop .3s ease-out forwards;}
+
+/* ── Celebration particles ────────────────────────── */
+@keyframes ring-expand{
+  0%  {transform:translate(-50%,-50%) scale(0);opacity:.9;}
+  100%{transform:translate(-50%,-50%) scale(4);opacity:0;}
+}
+@keyframes particle-fly{
+  0%  {opacity:1;transform:translate(var(--ox),var(--oy)) scale(1);}
+  100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0);}
+}
+.cel-ring{
+  position:fixed;top:50%;left:50%;
+  width:120px;height:120px;border-radius:50%;
+  border:3px solid var(--accent);
+  pointer-events:none;z-index:9998;
+  animation:ring-expand .7s cubic-bezier(.2,.8,.4,1) forwards;
+}
+.cel-ring2{
+  border-color:var(--green);
+  animation-delay:.12s;animation-duration:.75s;
+}
+.cel-p{
+  position:fixed;top:50%;left:50%;
+  width:9px;height:9px;border-radius:50%;
+  pointer-events:none;z-index:9998;
+  animation:particle-fly .7s ease-out forwards;
+}
+</style>
+</head>
+<body>
+
+<!-- Solana gradient — defined once, referenced everywhere via url(#solG) -->
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true">
+  <defs>
+    <linearGradient id="solG" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9945FF"/>
+      <stop offset="100%" stop-color="#14F195"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="notif" id="notif">
+  <span id="notif-text"></span>
+  <button class="notif-close" onclick="hideNotif()">✕</button>
+</div>
+
+<!-- HOME ─────────────────────────────────────────── -->
+<div class="screen active" id="screen-home">
+  <div class="balance-card">
+    <svg class="sol-card-logo" viewBox="0 0 397 311" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fill="url(#solG)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/>
+      <path fill="url(#solG)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/>
+      <path fill="url(#solG)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/>
+    </svg>
+    <div class="balance-label">Available Balance</div>
+    <div class="balance-amount" id="home-balance">$0.0000</div>
+    <div class="balance-sub" id="home-earned">Total earned: $0.0000</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val" id="home-mc" style="font-size:15px;font-family:'Inter',sans-serif;">—</div>
+      <div class="stat-lbl">Account</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="home-trades">0</div>
+      <div class="stat-lbl">Trades</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="home-earned-stat">$0</div>
+      <div class="stat-lbl">Earned</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Market Rates</div>
+    <div class="price-row">
+      <div>
+        <div class="price-name">Skeleton Spawner</div>
+        <div class="price-sub">Best rate guaranteed</div>
+      </div>
+      <div>
+        <div class="price-val">$0.16</div>
+        <div class="price-sub2">per spawner</div>
+      </div>
+    </div>
+    <div class="price-row">
+      <div>
+        <div class="price-name">Donut Money</div>
+        <div class="price-sub">Credited instantly</div>
+      </div>
+      <div>
+        <div class="price-val">$0.037</div>
+        <div class="price-sub2">per 1M coins</div>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <div class="bot-row">
+      <div class="dot busy" id="status-dot"></div>
+      <span id="status-text">Checking status...</span>
+    </div>
+  </div>
+
+  <div id="active-trade-section" style="display:none;">
+    <div class="trade-card">
+      <div class="trade-hd">Active Trade #<span id="active-trade-id"></span></div>
+      <div class="steps" id="progress-steps"></div>
+      <div class="trade-hint" id="active-trade-hint"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SELL ─────────────────────────────────────────── -->
+<div class="screen" id="screen-sell">
+  <div id="sell-no-mc" style="display:none;">
+    <div class="setup-center">
+      <h2>Link Your Account</h2>
+      <p>Enter your Minecraft username exactly as it appears in-game. Required to receive TPAs and coin payments.</p>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label class="flbl flbl-sol">Minecraft Username</label>
+        <input class="input" id="mc-input" placeholder="YourUsername" maxlength="17" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+      </div>
+      <button class="btn btn-primary" onclick="linkMC()">Link Account</button>
+    </div>
+  </div>
+
+  <div id="sell-main" style="display:none;">
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:3px;">Selling as</div>
+          <div style="font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;" id="sell-mc-name">—</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="showChangeMC()">Change</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" id="tab-spawner" onclick="setSellType('spawner')">Spawners</div>
+      <div class="tab" id="tab-coins" onclick="setSellType('coins')">Coins</div>
+    </div>
+
+    <!-- Spawner -->
+    <div id="panel-spawner">
+      <div class="card">
+        <div class="card-label">Quantity <span style="font-weight:500;color:var(--hint);font-size:12px;letter-spacing:.3px;">MAX 2,000</span></div>
+        <div class="qty-row">
+          <button class="qty-btn" onclick="adjQty(-1)">−</button>
+          <input
+            class="qty-input"
+            id="qty-val"
+            type="number"
+            min="1"
+            max="2000"
+            value="1"
+            inputmode="numeric"
+            oninput="onQtyInput(this)"
+            onblur="onQtyBlur(this)"
+          >
+          <button class="qty-btn" onclick="adjQty(1)">+</button>
+        </div>
+        <div class="presets">
+          <button class="btn btn-outline btn-sm" onclick="setQty(10)">10</button>
+          <button class="btn btn-outline btn-sm" onclick="setQty(27)">27</button>
+          <button class="btn btn-outline btn-sm" onclick="setQty(64)">64</button>
+          <button class="btn btn-outline btn-sm" onclick="setQty(128)">128</button>
+          <button class="btn btn-outline btn-sm" onclick="setQty(2000)" style="margin-left:auto;color:var(--accent);border-color:rgba(124,111,255,.35);">Max</button>
+        </div>
+        <div class="preview">
+          <span class="preview-label">You receive</span>
+          <span class="preview-val" id="spawner-preview">$0.1600</span>
+        </div>
+        <button class="btn btn-sell" id="sell-btn" onclick="startSell()">⚡ Start Trade</button>
+      </div>
+
+      <div class="card">
+        <div class="card-label">How It Works</div>
+        <div>
+          <div class="how-step">
+            <div class="how-num">1</div>
+            <div class="how-text"><strong>Accept the TPA</strong> from the bot in DonutSMP within 30 seconds</div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">2</div>
+            <div class="how-text"><strong>Drop your spawners</strong> on the ground near the bot</div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">3</div>
+            <div class="how-text"><strong>Bot secures the items</strong> — you'll see live progress above</div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">4</div>
+            <div class="how-text"><strong>Balance credited</strong> instantly — withdraw anytime as SOL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coins -->
+    <div id="panel-coins" style="display:none;">
+      <div class="card">
+        <div class="card-label">Send Coins to the Bot</div>
+        <div style="font-size:14px;color:var(--hint);margin-bottom:12px;line-height:1.6;">Use the /pay command in DonutSMP to send coins directly to the bot:</div>
+        <div class="code">/pay Skellys_Master [amount]</div>
+        <div class="info-box">
+          <strong>Instant</strong> — balance updates as soon as the payment appears in chat.<br>
+          <strong>No minimum</strong> — any amount accepted.<br>
+          Your Minecraft username must be linked to this account to receive credit.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Calculator</div>
+        <div class="field" style="margin-bottom:10px;">
+          <label class="flbl flbl-amount">Amount <span style="font-weight:400;opacity:.6;font-size:10px;text-transform:none;letter-spacing:0;">supports K, M, B, T</span></label>
+          <div class="coin-input-wrap">
+            <input class="input" id="coin-calc" placeholder="e.g. 10M or 2.5B" oninput="calcCoins()" autocomplete="off">
+          </div>
+        </div>
+        <div class="preview">
+          <span class="preview-label">You receive</span>
+          <span class="preview-val" id="coin-preview">$0.00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY ──────────────────────────────────────── -->
+<div class="screen" id="screen-history">
+  <div class="balance-card" style="padding:18px 22px;">
+    <svg class="sol-card-logo" viewBox="0 0 397 311" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fill="url(#solG)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/>
+      <path fill="url(#solG)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/>
+      <path fill="url(#solG)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/>
+    </svg>
+    <div class="balance-label">Total Earned</div>
+    <div class="balance-amount" id="hist-earned">$0.0000</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="ht-all"     onclick="setHistTab('all')">All</div>
+    <div class="tab"        id="ht-spawner" onclick="setHistTab('spawner')">Spawners</div>
+    <div class="tab"        id="ht-coins"   onclick="setHistTab('coins')">Coins</div>
+  </div>
+
+  <div id="hist-list"><div class="empty">No transactions yet</div></div>
+</div>
+
+<!-- WALLET ───────────────────────────────────────── -->
+<div class="screen" id="screen-wallet">
+  <div class="balance-card">
+    <svg class="sol-card-logo" viewBox="0 0 397 311" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fill="url(#solG)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/>
+      <path fill="url(#solG)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/>
+      <path fill="url(#solG)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/>
+    </svg>
+    <div class="balance-label">Available to Withdraw</div>
+    <div class="balance-amount" id="wallet-bal">$0.0000</div>
+    <div class="balance-sub">Minimum $0.10 · Instant</div>
+  </div>
+
+  <div class="card">
+    <div class="wl-head">Request Withdrawal</div>
+    <div id="w-decline" style="display:none;background:#1a0608;border:1px solid rgba(248,113,113,.4);color:var(--red);border-radius:var(--rs);padding:12px 16px;font-size:14px;margin-bottom:14px;">
+      Minimum withdrawal is $0.10
+    </div>
+    <div class="field">
+      <label class="flbl flbl-amount">Amount (USD)</label>
+      <input class="input" id="w-amount" type="number" placeholder="0.00" min="0.1" step="0.01" oninput="onAmountInput()">
+    </div>
+    <div class="field">
+      <div class="addr-label-row">
+        <label class="flbl flbl-sol" style="margin-bottom:0;">Solana Wallet</label>
+        <div class="save-toggle" onclick="toggleSaveAddress()">
+          <div class="save-circle" id="save-circle"><div class="save-check"></div></div>
+          <span class="flbl flbl-save">Save</span>
+        </div>
+      </div>
+      <input class="input" id="w-address" placeholder="Solana address" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="none">
+    </div>
+    <div class="field">
+      <label class="flbl flbl-method">Payment Method</label>
+      <div class="sol-method-box">
+        <div class="sol-icon">
+          <svg viewBox="0 0 397 311" xmlns="http://www.w3.org/2000/svg">
+            <path fill="url(#solG)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/>
+            <path fill="url(#solG)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/>
+            <path fill="url(#solG)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/>
+          </svg>
+        </div>
+        <div class="sol-method-info">
+          <div class="sol-method-name">Solana (SOL)</div>
+          <div class="sol-method-sub">⚡ Sent instantly on-chain</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="w-btn" onclick="doWithdraw()">Withdraw Instantly</button>
+  </div>
+
+  <div class="wl-hist-head">History</div>
+  <div id="w-list"><div class="empty">No withdrawals yet</div></div>
+</div>
+
+<!-- NAV ──────────────────────────────────────────── -->
+<nav class="nav">
+  <button class="nav-btn active" id="nav-home"    onclick="go('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </button>
+  <button class="nav-btn" id="nav-sell"    onclick="go('sell')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Sell
+  </button>
+  <button class="nav-btn" id="nav-history" onclick="go('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    History
+  </button>
+  <button class="nav-btn" id="nav-wallet"  onclick="go('wallet')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    Wallet
+  </button>
+</nav>
+
+<script>
+const tg = window.Telegram?.WebApp;
+tg?.ready(); tg?.expand();
+
+// Official Solana logo SVG — references the gradient defined in <defs> above
+const SOL_SVG = `<svg viewBox="0 0 397 311" xmlns="http://www.w3.org/2000/svg">
+  <path fill="url(#solG)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/>
+  <path fill="url(#solG)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/>
+  <path fill="url(#solG)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/>
+</svg>`;
+
+const P_SPAWNER = 0.16, P_1M = 0.037;
+const QTY_MIN = 1, QTY_MAX = 2000;
+let qty = 1, sellType = 'spawner', histTab = 'all';
+let userData = null, allOrders = [], allCoins = [];
+let prevBalance = null, activeOrderId = null;
+let addressSaved = false;
+
+// ── Sound ─────────────────────────────────────────────────────────────────────
+function playSuccessSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Ascending arpeggio: C5 → E5 → G5 → C6
+    [523, 659, 784, 1047].forEach((freq, i) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine'; osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.11;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.22, t + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+      osc.start(t); osc.stop(t + 0.5);
+    });
+  } catch {}
+}
+
+function playCancelSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.value = 220;
+    osc.frequency.linearRampToValueAtTime(140, ctx.currentTime + 0.25);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.start(); osc.stop(ctx.currentTime + 0.4);
+  } catch {}
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function api(path, method='GET', body=null) {
+  const r = await fetch(path, {
+    method,
+    headers:{'Content-Type':'application/json','x-telegram-init-data':tg?.initData||''},
+    body: body ? JSON.stringify(body) : null,
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Request failed');
+  return d;
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+let notifT = null;
+function notify(msg, type='info', ms=4000) {
+  document.getElementById('notif-text').textContent = msg;
+  const el = document.getElementById('notif');
+  el.className = `notif ${type} show`;
+  clearTimeout(notifT);
+  if (ms > 0) notifT = setTimeout(hideNotif, ms);
+  try { tg?.HapticFeedback?.notificationOccurred(type==='success'?'success':type==='error'?'error':'warning'); } catch {}
+}
+function hideNotif() { document.getElementById('notif').classList.remove('show'); }
+
+// ── Screens ───────────────────────────────────────────────────────────────────
+function go(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if (name==='sell')    renderSell();
+  if (name==='history') loadHistory();
+  if (name==='wallet')  loadWallet();
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+async function boot() {
+  try {
+    userData = await api('/api/me');
+    prevBalance = userData.balance;
+    renderHome();
+    pollBotStatus();
+    pollActiveTrade();
+    setInterval(refresh, 8000);
+  } catch(e) {
+    if (e.message?.toLowerCase().includes('banned')) {
+      notify('Your account has been banned. Contact support.', 'error', 0);
+    } else {
+      notify('Failed to load — open this app from the Telegram bot.', 'error', 0);
+    }
+  }
+}
+
+async function refresh() {
+  try {
+    const u = await api('/api/me');
+    if (u.balance !== prevBalance) {
+      prevBalance = u.balance;
+      userData = u;
+      renderHome();
+      // Pop the balance number
+      const el = document.getElementById('home-balance');
+      el.classList.remove('pop');
+      void el.offsetWidth;
+      el.classList.add('pop');
+    } else {
+      userData = u;
+      renderHome();
+    }
+  } catch {}
+}
+
+function renderHome() {
+  if (!userData) return;
+  document.getElementById('home-balance').textContent     = `$${userData.balance.toFixed(4)}`;
+  document.getElementById('home-earned').textContent      = `Total earned: $${userData.totalEarned.toFixed(4)}`;
+  document.getElementById('home-mc').textContent          = userData.mcUsername || 'Not linked';
+  document.getElementById('home-trades').textContent      = userData.totalTrades || 0;
+  document.getElementById('home-earned-stat').textContent = `$${(userData.totalEarned||0).toFixed(2)}`;
+  const wb = document.getElementById('wallet-bal');
+  if (wb) wb.textContent = `$${userData.balance.toFixed(4)}`;
+}
+
+// ── Bot status ────────────────────────────────────────────────────────────────
+async function pollBotStatus() {
+  try {
+    const s = await api('/api/bot-status');
+    const dot=document.getElementById('status-dot'), txt=document.getElementById('status-text');
+    if (!s.connected) {
+      dot.className='dot off'; txt.textContent='Bot offline — trades unavailable';
+    } else if (s.busy) {
+      dot.className='dot busy'; txt.textContent=`Bot handling trade #${s.currentOrder}`;
+    } else {
+      dot.className='dot on'; txt.textContent=`${s.username} is online and ready`;
+    }
+  } catch {}
+  setTimeout(pollBotStatus, 10000);
+}
+
+// ── Active trade ──────────────────────────────────────────────────────────────
+const STEPS = [
+  {key:'tpa_sent',      label:'Accept the TPA request in Minecraft',    hint:'Open Minecraft and accept the teleport request from the bot. You have 30 seconds.'},
+  {key:'dropping',      label:'Drop spawners to the bot',                hint:'Drop your skeleton spawners near the bot. Wait for the bot to collect them all.'},
+  {key:'counting',      label:'Bot verifying items',                     hint:'The bot is counting and verifying your spawners.'},
+  {key:'homing',        label:'Bot returning to secure location',        hint:'The bot is teleporting to a secure location to store your items.'},
+  {key:'combat_escape', label:'Bot escaping combat — reconnecting',      hint:'The seller kept attacking the bot. It is reconnecting to complete the trade safely.'},
+  {key:'depositing',    label:'Depositing to secure storage',            hint:'Almost done. The bot is storing your spawners safely.'},
+  {key:'complete',      label:'Trade complete',                          hint:'Your balance has been credited.'},
+];
+
+function friendlyFailReason(reason) {
+  if (!reason) return 'Trade was cancelled.';
+  const r = reason.toLowerCase();
+  if (r.includes('tpa not accepted'))         return 'TPA request was not accepted in time. Make sure you\'re in Minecraft and accept quickly.';
+  if (r.includes('not online') || r.includes('not online on donutsmp')) return 'You weren\'t online on DonutSMP when the trade started. Join the server first, then sell.';
+  if (r.includes('no items received'))        return 'No spawners were received in time. Drop them faster next time!';
+  if (r.includes('player said done'))         return 'You said done but no spawners were received. Drop the items before typing done.';
+  if (r.includes('killed') && r.includes('collecting')) return 'Bot was killed while carrying your spawners — items are lost.';
+  if (r.includes('killed before'))            return 'Bot was killed before receiving any items — trade cancelled, no charge.';
+  if (r.includes('combat') || r.includes('attacker')) return 'A player attacked the bot while it was returning home — items were lost.';
+  if (r.includes('lost') && r.includes('deposit')) return 'Spawners were lost before deposit — trade cancelled.';
+  return reason;
+}
+
+async function pollActiveTrade() {
+  try {
+    const order = await api('/api/active-order');
+    const sec = document.getElementById('active-trade-section');
+    if (!order) {
+      sec.style.display = 'none';
+      if (activeOrderId) {
+        const lastId = activeOrderId;
+        activeOrderId = null;
+        try {
+          const finished = await api(`/api/order/${lastId}`);
+          userData = await api('/api/me');
+          renderHome();
+          if (finished.status === 'complete') {
+            playSuccessSound();
+            celebrate();
+            notify(`Trade complete — ${finished.quantity_recv}× spawner, +$${finished.value_usd.toFixed(4)} credited.`, 'success', 7000);
+          } else {
+            playCancelSound();
+            notify(friendlyFailReason(finished.fail_reason), 'error', 9000);
+          }
+        } catch {
+          userData = await api('/api/me');
+          renderHome();
+        }
+      }
+    } else {
+      activeOrderId = order.id;
+      sec.style.display = 'block';
+      document.getElementById('active-trade-id').textContent = order.id;
+      const ci = STEPS.findIndex(s=>s.key===order.status);
+      document.getElementById('active-trade-hint').textContent = STEPS[ci]?.hint||'';
+      document.getElementById('progress-steps').innerHTML = STEPS.map((s,i)=>{
+        const cls = i<ci?'done':i===ci?'active':'';
+        return `<div class="step ${cls}"><div class="step-dot">${i<ci?'✓':''}</div><span>${s.label}</span></div>`;
+      }).join('');
+    }
+  } catch {}
+  setTimeout(pollActiveTrade, 4000);
+}
+
+// ── Sell ──────────────────────────────────────────────────────────────────────
+function renderSell() {
+  const noMC = !userData?.mcUsername;
+  document.getElementById('sell-no-mc').style.display = noMC?'block':'none';
+  document.getElementById('sell-main').style.display  = noMC?'none':'block';
+  if (!noMC) document.getElementById('sell-mc-name').textContent = userData.mcUsername;
+  updatePreview();
+}
+
+function setSellType(t) {
+  sellType = t;
+  document.getElementById('tab-spawner').classList.toggle('active',t==='spawner');
+  document.getElementById('tab-coins').classList.toggle('active',t==='coins');
+  document.getElementById('panel-spawner').style.display = t==='spawner'?'block':'none';
+  document.getElementById('panel-coins').style.display   = t==='coins'?'block':'none';
+}
+
+// Clamp qty to valid range and sync the input element
+function _setQtyState(n) {
+  qty = Math.max(QTY_MIN, Math.min(QTY_MAX, Math.floor(n) || QTY_MIN));
+  const el = document.getElementById('qty-val');
+  if (el) el.value = qty;
+  updatePreview();
+}
+
+function adjQty(d) { _setQtyState(qty + d); }
+function setQty(n)  { _setQtyState(n); }
+
+// Called on every keystroke — allow typing freely, just update preview live
+function onQtyInput(el) {
+  const raw = parseInt(el.value, 10);
+  if (!isNaN(raw) && raw >= QTY_MIN) {
+    qty = Math.min(QTY_MAX, Math.max(QTY_MIN, raw));
+  }
+  updatePreview();
+}
+
+// On blur — enforce the final clamped value and fix the field
+function onQtyBlur(el) {
+  _setQtyState(parseInt(el.value, 10));
+}
+
+function updatePreview() {
+  const el = document.getElementById('spawner-preview');
+  el.textContent = `$${(qty * P_SPAWNER).toFixed(4)}`;
+  el.classList.remove('changed');
+  void el.offsetWidth;
+  el.classList.add('changed');
+}
+
+// Parse coin amounts like 10M, 2.5B, 500K
+function parseCoins(str) {
+  if (!str) return 0;
+  const s = str.trim().toUpperCase();
+  const num = parseFloat(s);
+  if (isNaN(num)) return 0;
+  if (s.endsWith('T')) return num * 1e12;
+  if (s.endsWith('B')) return num * 1e9;
+  if (s.endsWith('M')) return num * 1e6;
+  if (s.endsWith('K')) return num * 1e3;
+  return num;
+}
+
+function calcCoins() {
+  const raw = document.getElementById('coin-calc').value;
+  const coins = parseCoins(raw);
+  document.getElementById('coin-preview').textContent = `$${((coins/1e6)*P_1M).toFixed(coins>=1e6?4:6)}`;
+}
+
+async function linkMC() {
+  const name = document.getElementById('mc-input').value.trim();
+  if (!name) { notify('Enter your Minecraft username', 'error'); return; }
+
+  const clean = name.startsWith('.') ? name.slice(1) : name;
+  if (clean.length < 2 || clean.length > 16 || !/^[a-zA-Z0-9_]+$/.test(clean)) {
+    notify('Invalid username — 2–16 chars, letters/numbers/underscores only (optional leading dot)', 'error');
+    return;
+  }
+
+  try {
+    await api('/api/setmc', 'POST', { mcUsername: name });
+    userData = await api('/api/me');
+    notify(`Linked to ${name} — you're ready to sell!`, 'success', 5000);
+    renderSell(); renderHome();
+  } catch(e) {
+    const msg = e.message || '';
+    if (msg.toLowerCase().includes('already linked')) {
+      notify(`${name} is already linked to another account. Use your own Minecraft username.`, 'error', 7000);
+    } else {
+      notify(msg || 'Failed to link account. Try again.', 'error');
+    }
+  }
+}
+
+function showChangeMC() {
+  document.getElementById('sell-no-mc').style.display='block';
+  document.getElementById('sell-main').style.display='none';
+  document.getElementById('mc-input').value=userData?.mcUsername||'';
+}
+
+async function startSell() {
+  if (qty < QTY_MIN || qty > QTY_MAX) {
+    notify(`Quantity must be between ${QTY_MIN} and ${QTY_MAX}`, 'error');
+    return;
+  }
+  const btn = document.getElementById('sell-btn');
+  btn.disabled = true; btn.textContent = 'Starting...';
+  try {
+    const r = await api('/api/sell', 'POST', { quantity: qty });
+    notify(`Trade #${r.orderId} started — accept the TPA request in Minecraft now.`, 'success', 8000);
+    go('home');
+  } catch(e) {
+    const msg = e.message || '';
+    if (msg.toLowerCase().includes('not online') || msg.toLowerCase().includes('offline') && msg.toLowerCase().includes('player')) {
+      notify('You\'re not online on DonutSMP. Join the server first, then start the trade.', 'error', 7000);
+    } else if (msg.toLowerCase().includes('bot') && msg.toLowerCase().includes('offline')) {
+      notify('The trade bot is offline right now. Check the status on the Home tab and try again shortly.', 'error', 7000);
+    } else if (msg.toLowerCase().includes('busy')) {
+      notify('The bot is busy with another trade. Wait a moment and try again.', 'error', 6000);
+    } else if (msg.toLowerCase().includes('active trade')) {
+      notify(msg + ' — check the Home tab to see its current status.', 'error', 7000);
+    } else if (msg.toLowerCase().includes('minecraft username')) {
+      notify('Link your Minecraft account first — tap "Change Account" below.', 'error', 6000);
+    } else {
+      notify(msg || 'Failed to start trade. Please try again.', 'error', 6000);
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = 'Start Trade';
+  }
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+const SMAP = {
+  complete:      {badge:'bg',txt:'Complete'},
+  failed:        {badge:'br',txt:'Failed'},
+  tpa_sent:      {badge:'by',txt:'Awaiting TPA'},
+  dropping:      {badge:'by',txt:'Dropping'},
+  counting:      {badge:'by',txt:'Verifying'},
+  homing:        {badge:'by',txt:'Securing'},
+  combat_escape: {badge:'by',txt:'Combat Escape'},
+  depositing:    {badge:'by',txt:'Depositing'},
+};
+
+function setHistTab(t) {
+  histTab=t;
+  ['all','spawner','coins'].forEach(x=>document.getElementById(`ht-${x}`).classList.toggle('active',x===t));
+  renderHistList();
+}
+
+async function loadHistory() {
+  if (userData) document.getElementById('hist-earned').textContent=`$${userData.totalEarned.toFixed(4)}`;
+  try {
+    [allOrders,allCoins] = await Promise.all([api('/api/orders'),api('/api/coin-sales')]);
+    renderHistList();
+  } catch(e) { notify(e.message,'error'); }
+}
+
+function fmtDate(ts) {
+  return new Date(ts*1000).toLocaleDateString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function fmtCoins(n) {
+  if(n>=1e12) return `${(n/1e12).toFixed(2)}T`;
+  if(n>=1e9)  return `${(n/1e9).toFixed(2)}B`;
+  if(n>=1e6)  return `${(n/1e6).toFixed(2)}M`;
+  if(n>=1e3)  return `${(n/1e3).toFixed(2)}K`;
+  return n.toString();
+}
+
+function renderHistList() {
+  const el = document.getElementById('hist-list');
+  let items = [];
+  if (histTab !== 'coins') {
+    items = items.concat(allOrders.map(o => {
+      const s = SMAP[o.status]||{badge:'bb',txt:o.status};
+      return {
+        ts:o.created_at,
+        iconTxt: o.status==='complete'?'↑':o.status==='failed'?'×':'…',
+        iconBg:  o.status==='complete'?'rgba(52,211,153,.12)':o.status==='failed'?'rgba(248,113,113,.12)':'rgba(251,191,36,.12)',
+        iconCol: o.status==='complete'?'var(--green)':o.status==='failed'?'var(--red)':'var(--amber)',
+        title:   `${o.quantity_recv||o.quantity_req}× Skeleton Spawner`,
+        sub:     fmtDate(o.created_at),
+        badge:s.badge, badgeTxt:s.txt,
+        val:     o.status==='complete'?`+$${o.value_usd.toFixed(4)}`:'—',
+        pos:     o.status==='complete',
+      };
+    }));
+  }
+  if (histTab !== 'spawner') {
+    items = items.concat(allCoins.map(c => ({
+      ts:c.created_at,
+      iconTxt:'↑', iconBg:'rgba(96,165,250,.12)', iconCol:'var(--blue)',
+      title:`${fmtCoins(c.coins_amount)} coins`,
+      sub:fmtDate(c.created_at),
+      badge:'bb', badgeTxt:'Coins',
+      val:`+$${c.value_usd.toFixed(4)}`, pos:true,
+    })));
+  }
+  items.sort((a,b)=>b.ts-a.ts);
+  if (!items.length) { el.innerHTML='<div class="empty">No transactions yet</div>'; return; }
+  el.innerHTML = items.map(i=>`
+    <div class="row">
+      <div class="row-icon" style="background:${i.iconBg};color:${i.iconCol};">${i.iconTxt}</div>
+      <div class="row-body">
+        <div class="row-title">${i.title}</div>
+        <div class="row-sub">${i.sub}&nbsp;&nbsp;<span class="badge ${i.badge}">${i.badgeTxt}</span></div>
+      </div>
+      <div class="row-val ${i.pos?'':i.val==='—'?'neutral':'neg'}">${i.val}</div>
+    </div>`).join('');
+}
+
+// ── Wallet ────────────────────────────────────────────────────────────────────
+
+async function loadSavedAddress() {
+  try {
+    const r = await api('/api/saved-address');
+    const input = document.getElementById('w-address');
+    const circle = document.getElementById('save-circle');
+    if (r.address) {
+      addressSaved = true;
+      input.value = r.address;
+      input.readOnly = true;
+      input.classList.add('addr-locked');
+      circle.classList.add('ticked');
+    } else {
+      addressSaved = false;
+      input.readOnly = false;
+      input.classList.remove('addr-locked');
+      circle.classList.remove('ticked');
+    }
+  } catch {}
+}
+
+async function toggleSaveAddress() {
+  const input = document.getElementById('w-address');
+  const circle = document.getElementById('save-circle');
+  if (addressSaved) {
+    try {
+      await api('/api/saved-address', 'DELETE');
+      addressSaved = false;
+      input.readOnly = false;
+      input.classList.remove('addr-locked');
+      circle.classList.remove('ticked');
+    } catch(e) { notify(e.message, 'error'); }
+  } else {
+    const addr = input.value.trim();
+    if (!addr) { notify('Enter a Solana address to save', 'error'); return; }
+    try {
+      await api('/api/saved-address', 'POST', { address: addr });
+      addressSaved = true;
+      input.readOnly = true;
+      input.classList.add('addr-locked');
+      circle.classList.add('ticked');
+      notify('Address saved', 'success', 2000);
+    } catch(e) { notify(e.message, 'error'); }
+  }
+}
+
+function onAmountInput() {
+  const amt = parseFloat(document.getElementById('w-amount').value);
+  const dec = document.getElementById('w-decline');
+  if (amt && amt < 0.1) {
+    dec.style.display = 'block';
+  } else {
+    dec.style.display = 'none';
+  }
+}
+
+async function loadWallet() {
+  if (userData) document.getElementById('wallet-bal').textContent=`$${userData.balance.toFixed(4)}`;
+  loadSavedAddress();
+  try {
+    const list = await api('/api/withdrawals');
+    const el=document.getElementById('w-list');
+    if (!list.length) { el.innerHTML='<div class="empty">No withdrawals yet</div>'; return; }
+    const S={pending:{b:'by',t:'Pending'},processing:{b:'bb',t:'Processing'},paid:{b:'bg',t:'Paid'},rejected:{b:'br',t:'Rejected'}};
+    el.innerHTML=list.map(w=>{
+      const s=S[w.status]||{b:'bb',t:w.status};
+      return `<div class="row">
+        <div class="sol-row-icon">${SOL_SVG}</div>
+        <div class="row-body">
+          <div class="row-title">$${w.amount.toFixed(2)} — Solana</div>
+          <div class="row-sub">${fmtDate(w.requested_at)}&nbsp;&nbsp;<span class="badge ${s.b}">${s.t}</span></div>
+        </div>
+        <div class="row-val neg">−$${w.amount.toFixed(2)}</div>
+      </div>`;
+    }).join('');
+  } catch {}
+}
+
+async function doWithdraw() {
+  const amount = parseFloat(document.getElementById('w-amount').value);
+  const address = document.getElementById('w-address').value.trim();
+  const dec = document.getElementById('w-decline');
+  const btn = document.getElementById('w-btn');
+
+  if (!amount || amount < 0.1) {
+    dec.style.display = 'block';
+    dec.textContent = `Minimum withdrawal is $${(parseFloat(document.getElementById('w-amount').value)||0) > 0 ? '0.10 — enter a larger amount' : '0.10'}`;
+    return;
+  }
+  dec.style.display = 'none';
+
+  if (!address) {
+    notify('Enter your Solana wallet address to continue.', 'error');
+    document.getElementById('w-address').focus();
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending SOL...';
+
+  try {
+    await api('/api/withdraw', 'POST', { amount, method: 'sol', address });
+    document.getElementById('w-amount').value = '';
+    if (!addressSaved) document.getElementById('w-address').value = '';
+    document.activeElement?.blur();
+    celebrate();
+    notify(`$${amount.toFixed(2)} sent! SOL is on its way to your wallet.`, 'success', 7000);
+    userData = await api('/api/me'); renderHome(); loadWallet();
+  } catch(e) {
+    const msg = e.message || '';
+    if (msg.toLowerCase().includes('invalid') && msg.toLowerCase().includes('address')) {
+      notify('Invalid Solana address — double-check and paste it again.', 'error', 7000);
+      document.getElementById('w-address').focus();
+    } else if (msg.toLowerCase().includes('insufficient') || msg.toLowerCase().includes('balance')) {
+      notify(msg + ' — sell more spawners or Donut Money to top up.', 'error', 7000);
+    } else if (msg.toLowerCase().includes('minimum')) {
+      notify(`Minimum withdrawal is $0.10 — enter a higher amount.`, 'error', 6000);
+    } else if (msg.toLowerCase().includes('transfer failed')) {
+      notify('SOL transfer failed — your balance was not charged. Try again or contact support.', 'error', 8000);
+    } else {
+      notify(msg || 'Withdrawal failed. Please try again.', 'error', 6000);
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Withdraw Instantly';
+  }
+}
+
+// ── Celebration ───────────────────────────────────────────────────────────────
+function celebrate() {
+  const colors = ['#9945ff','#14f195','#c8b9ff','#fbbf24','#60a5fa','#f87171'];
+  // Two expanding rings
+  [0, 120].forEach((delay, ri) => {
+    const ring = document.createElement('div');
+    ring.className = 'cel-ring' + (ri === 1 ? ' cel-ring2' : '');
+    ring.style.animationDelay = delay + 'ms';
+    document.body.appendChild(ring);
+    setTimeout(() => ring.remove(), 900 + delay);
+  });
+  // Particles
+  const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'cel-p';
+    const angle = (i / 18) * Math.PI * 2;
+    const dist = 90 + Math.random() * 80;
+    const tx = Math.cos(angle) * dist, ty = Math.sin(angle) * dist;
+    p.style.cssText = [
+      `left:${cx}px`, `top:${cy}px`, `margin:-4.5px 0 0 -4.5px`,
+      `background:${colors[i % colors.length]}`,
+      `--ox:0px`, `--oy:0px`,
+      `--tx:${tx.toFixed(0)}px`, `--ty:${ty.toFixed(0)}px`,
+      `animation-delay:${Math.random() * 80}ms`,
+    ].join(';');
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+  playSuccessSound();
+}
+
+function playSuccessSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[523.25, 0], [659.25, 0.1], [783.99, 0.2]].forEach(([freq, delay]) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.connect(gain); gain.connect(ctx.destination);
+      const t = ctx.currentTime + delay;
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.22, t + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+      osc.start(t); osc.stop(t + 0.4);
+    });
+  } catch {}
+}
+
+// Dismiss keyboard when tapping outside any input on mobile
+document.addEventListener('touchstart', (e) => {
+  if (!e.target.closest('input,select,textarea,button')) {
+    document.activeElement?.blur();
+  }
+}, { passive: true });
+
+// ── Mouse wheel scroll for Telegram Desktop ──────────────────────────────────
+// tdesktop's CEF webview receives wheel events in JS but doesn't pass them to
+// native scroll; intercept and apply manually. preventDefault stops any native
+// attempt so we don't double-scroll.
+if (tg?.platform === 'tdesktop') {
+  document.addEventListener('wheel', e => {
+    e.preventDefault();
+    window.scrollBy(0, e.deltaY);
+  }, { passive: false });
+}
+
+// ── Mobile keyboard: slide nav behind keyboard so it doesn't float above it ───
+(function () {
+  const nav = document.querySelector('.nav');
+
+  function syncNav() {
+    if (!window.visualViewport) return;
+    const vv = window.visualViewport;
+    // kbHeight > 0 when keyboard is open (visual viewport shrank)
+    const kbHeight = Math.max(0, window.innerHeight - vv.offsetTop - vv.height);
+    if (kbHeight > 150) {
+      // Push nav down below keyboard — it hides behind it, won't float above
+      nav.style.transform = `translateX(-50%) translateY(${kbHeight}px)`;
+    } else {
+      nav.style.transform = 'translateX(-50%) translateY(0)';
+    }
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncNav, { passive: true });
+    window.visualViewport.addEventListener('scroll', syncNav, { passive: true });
+  }
+
+  // When address field is focused, scroll it into the visible area above keyboard
+  // so the paste popup appears high enough that the Withdraw button stays hidden
+  document.getElementById('w-address')?.addEventListener('focus', function () {
+    setTimeout(() => {
+      const vv = window.visualViewport;
+      const rect = this.getBoundingClientRect();
+      // Center the input in the visible area above the keyboard
+      const visibleHeight = vv ? vv.height : window.innerHeight;
+      const inputCenter = rect.top + rect.height / 2;
+      const targetCenter = visibleHeight / 2;
+      window.scrollBy({ top: inputCenter - targetCenter, behavior: 'smooth' });
+    }, 350); // wait for keyboard animation
+  }, { passive: true });
+})();
+
+boot();
+</script>
+</body>
+</html>
