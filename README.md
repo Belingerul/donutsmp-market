@@ -1,21 +1,35 @@
 # DonutSMP Market
 
-A fully automated Minecraft arbitrage bot for DonutSMP. Players place orders through a Telegram Mini App and pay with Solana — the in-game bot then purchases the items from the DonutSMP shop at the cheaper in-game price and delivers them directly to the buyer. The margin between shop cost and sale price is pure profit, fully hands-off.
+A Telegram Mini App + automated Minecraft bot that buys skeleton spawners and Donut Money from DonutSMP players and pays them instantly in Solana.
+
+Players sell their in-game items through the app, the bot collects them in-game, and they cash out to their Solana wallet — no trust required, fully automated.
 
 Built with Node.js, Mineflayer, Telegraf, and the Solana Web3 SDK.
+
+<img src="images/preview.jpg" alt="Withdraw screen" width="320" />
 
 ---
 
 ## How it works
 
-1. Player opens the **Telegram Mini App** → sees available items and prices
-2. They place an order and send **Solana payment** to the bot's wallet
-3. Payment is detected on-chain automatically
-4. The **in-game Minecraft bot** buys the items from the DonutSMP shop at the low in-game price
-5. Bot accepts the player's TPA and delivers the items directly to them
-6. Transaction is logged and the profit (sale price minus shop cost) is recorded
+**Selling spawners:**
+1. Player opens the Telegram Mini App, links their Minecraft username, and places a sell order
+2. The in-game bot sends them a `/tpa` request on DonutSMP
+3. Player accepts and drops their skeleton spawners on the ground
+4. Bot picks up the spawners (throws back anything that isn't a spawner), then returns home via `/home`
+5. Bot deposits the spawners into its ender chest
+6. Player's USD balance is credited instantly (`quantity × spawner price`)
 
-Everything from payment detection to purchase and delivery is fully automated.
+**Selling Donut Money (in-game coins):**
+1. Player uses `/pay <bot>` in-game to send coins directly to the bot
+2. Bot detects the payment from chat automatically
+3. Player's USD balance is credited (`coins ÷ 1M × coin price`)
+
+**Withdrawing:**
+- Player opens the app, enters their Solana wallet address and withdrawal amount
+- Payout is sent on-chain via the bot's Solana wallet
+
+The owner accumulates spawners and coins bought at the market price and resells them at a higher price elsewhere — the spread is the profit.
 
 ---
 
@@ -36,12 +50,12 @@ Everything from payment detection to purchase and delivery is fully automated.
 ```
 src/
 ├── index.js              — entry point, boots all services
-├── minecraft/bot.js      — in-game bot (TPA, item detection, pathfinding)
-├── telegram/bot.js       — Telegram bot commands and order flow
-├── webapp/               — Mini App UI served to players
-├── payments/solana.js    — on-chain payment detection and verification
-├── transactions/         — order state machine
-└── database/db.js        — balances, orders, withdrawal ledger
+├── minecraft/bot.js      — in-game bot (TPA, item collection, /home, ender chest deposit)
+├── telegram/bot.js       — Telegram commands, admin panel
+├── webapp/               — Mini App UI (balance, sell flow, withdrawal)
+├── payments/solana.js    — on-chain Solana payout logic
+├── transactions/         — trade state machine, event handling
+└── database/db.js        — users, orders, balances, withdrawals
 ```
 
 ---
@@ -74,14 +88,14 @@ On first start you'll see a Microsoft device auth prompt:
 To sign in, open https://www.microsoft.com/link and enter the code XXXX-XXXX
 ```
 
-Open the link, log in with the bot account's Microsoft credentials. This only happens once — the token is cached.
+Open the link and log in with the bot account's Microsoft credentials. This only happens once — the session is cached.
 
 ### Set the bot's home in-game
 
-The bot needs a home location with an ender chest nearby:
+The bot needs a home location with an ender chest nearby to deposit collected items:
 
 1. Log into DonutSMP on the bot account
-2. Place an **ender chest** within 4 blocks of your position
+2. Place an **ender chest** within a few blocks of where you're standing
 3. Run `/sethome 1`
 
 ### Connect the Mini App
@@ -94,7 +108,7 @@ Set the URL to your `WEBAPP_URL` from `.env`.
 
 ## Configuration
 
-Copy `.env.example` to `.env` and fill in the values:
+Copy `.env.example` to `.env` and fill in:
 
 | Variable | Description |
 |---|---|
@@ -104,8 +118,8 @@ Copy `.env.example` to `.env` and fill in the values:
 | `MC_USERNAME` | Microsoft email for the bot's Minecraft account |
 | `MC_SERVER` | Server address |
 | `MC_VERSION` | Server Minecraft version |
-| `PRICE_SPAWNER` | Spawner price in USD |
-| `PRICE_1M_COINS` | Price per 1M in-game coins in USD |
+| `PRICE_SPAWNER` | Price per spawner you pay out (in USD) |
+| `PRICE_1M_COINS` | Price per 1M Donut Money you pay out (in USD) |
 | `SOLANA_PRIVATE_KEY` | Base58 private key from Phantom |
 | `SOLANA_RPC_URL` | RPC endpoint (default: mainnet-beta public) |
 
@@ -113,7 +127,7 @@ Copy `.env.example` to `.env` and fill in the values:
 
 ## Running 24/7
 
-For always-on operation, deploy to a cheap VPS (Hetzner or DigitalOcean, ~$4–6/month) and use PM2:
+Deploy to a cheap VPS (Hetzner or DigitalOcean, ~$4–6/month) and use PM2:
 
 ```bash
 npm install -g pm2
